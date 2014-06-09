@@ -22,7 +22,7 @@ namespace GadgeteerFlexor
     public partial class Program
     {
 
-        private const double forceLimit = 3.25;
+        private const double forceLimit = 0.80;
         private const int maxCycles = 8; //8*100 millis = 0,8 segundos
         private const int intervalMillis = 100;
 
@@ -139,14 +139,38 @@ namespace GadgeteerFlexor
         void guardaActualCara() {
 
             /*
-             * Guardar la hora y la cara guardada
-             */
+             * El led comienza a parpadear
+             */ 
 
             multicolorLed.BlinkRepeatedly(multicolorLed.GetCurrentColor());
 
+            /*
+             * Guardar la hora y la cara guardada
+             */
+
             facesFile = new StreamWriter(rootDirectory + @"\FacesValues.txt", true);
 
-            string line = DateTime.Now.ToString() + "," + currentFace.ToString();
+            string color = "";
+
+
+            if (currentFace == 1) {
+                color = "Verde";
+            }
+            else if (currentFace == 2)
+            {
+                color = "Azul";
+            }
+            else if (currentFace == 3)
+            {
+                color = "Blanco";
+            }
+            else if (currentFace == 4)
+            {
+                color = "Rojo";
+            }
+
+            string line = DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss.fff tt") + "," + color;
+
 
             facesFile.WriteLine(line);
             facesFile.Close();
@@ -163,14 +187,31 @@ namespace GadgeteerFlexor
         
         }
 
+        void apagaPelota() {
+
+            multicolorLed.TurnOff();
+            currentFace = 0;
+
+            facesFile = new StreamWriter(rootDirectory + @"\FacesValues.txt", true);
+
+            string line = DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss.fff tt") + "," + "Se apaga la pelota!!";
+
+            facesFile.WriteLine(line);
+            facesFile.Close();
+
+        
+        }
+
         void TimerTick(GT.Timer timer)
         {
             forceValue = getForceValue();
 
-            Debug.Print("Force: " + forceValue);
-
             if (isPressed()) 
             {
+
+                /*
+                 * Se guarda el valor obtenido del sensor
+                 */
 
                 forceValuesFile = new StreamWriter(rootDirectory + @"\ForceValues.txt", true);
                 forceValuesFile.WriteLine(forceValue.ToString());
@@ -197,15 +238,17 @@ namespace GadgeteerFlexor
 
                     if (pressed_times >= 3)
                     {
+                        Debug.Print("La pelota ha sido liberada tres veces consecutivas!!");
+
                         pressed_times = 0;
                         cycles = 0;
 
-                        multicolorLed.TurnOff();
-                        currentFace = 0;
+                        apagaPelota();
+
                     } 
                     else if (pressed_times == 2)
                     {
-                        Debug.Print("La pelota ha sido liberado dos veces consecutivas!!");
+                        Debug.Print("La pelota ha sido liberada dos veces consecutivas!!");
 
                         //pressed_times = 0;
                         cycles = 0;
@@ -237,7 +280,7 @@ namespace GadgeteerFlexor
             {
                 cycles++;
             }
-
+            
         }
 
         void sdCard_SDCardUnmounted(SDCard sender)
